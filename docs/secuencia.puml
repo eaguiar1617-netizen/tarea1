@@ -1,0 +1,10 @@
+
+@startuml
+title Secuencia: Cambiar estado de un caso
+
+actor Administrador
+participant Main
+participant GestionCasos
+participant CasoRescate
+participant NotificadorEstado
+participant ObservadorConsola

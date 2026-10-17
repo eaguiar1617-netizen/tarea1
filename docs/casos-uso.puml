@@ -1,0 +1,38 @@
+@startuml
+left to right direction
+
+actor Ciudadano
+actor Responsable
+actor Voluntario
+actor Veterinario
+actor Administrador
+
+Voluntario --|> Responsable
+Veterinario --|> Responsable
+
+rectangle "Sistema de Gestion de Rescate y Adopcion Animal" {
+    usecase "Registrar caso de rescate" as UC1
+    usecase "Consultar casos" as UC2
+    usecase "Asignar responsable" as UC3
+    usecase "Cambiar estado del caso" as UC4
+    usecase "Registrar adopcion" as UC5
+    usecase "Guardar y cargar casos" as UC6
+}
+
+Ciudadano -- UC1
+Ciudadano -- UC2
+
+Responsable -- UC2
+Responsable -- UC4
+
+Administrador -- UC1
+Administrador -- UC2
+Administrador -- UC3
+Administrador -- UC4
+Administrador -- UC5
+
+UC1 ..> UC6 : <<include>>
+UC4 ..> UC6 : <<include>>
+UC5 ..> UC6 : <<include>>
+
+@enduml

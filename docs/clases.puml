@@ -1,0 +1,84 @@
+@startuml
+skinparam classAttributeIconSize 0
+
+class Main {
+  - teclado : Scanner
+  - gestor : GestionCasos
+  - notificador : NotificadorEstado
+  + main(args : String[]) : void
+  + registrarCaso() : void
+  + mostrarCasos() : void
+  + asignarResponsable() : void
+  + cambiarEstado() : void
+  + registrarAdopcion() : void
+}
+
+class GestionCasos <<Singleton>> {
+  - instancia : GestionCasos
+  - casos : ArrayList<CasoRescate>
+  - siguienteCodigo : int
+  - archivo : String
+  - GestionCasos()
+  + getInstancia() : GestionCasos
+  + getCasos() : ArrayList<CasoRescate>
+  + nuevoCodigo() : int
+  + buscarCaso(codigo : int) : CasoRescate
+  + guardarCasos() : void
+}
+
+class CasoRescate {
+  + codigo : int
+  + nombre : String
+  + especie : String
+  + descripcion : String
+  + estado : String
+  + responsable : String
+  + tipoResponsable : String
+  + adoptante : String
+  + cambiarEstado(nuevoEstado, notificador) : void
+}
+
+interface ObservadorCaso {
+  + actualizar(caso, estadoAnterior) : void
+}
+
+class NotificadorEstado {
+  - observadores : ArrayList<ObservadorCaso>
+  + agregarObservador(observador) : void
+  + notificar(caso, estadoAnterior) : void
+}
+
+class ObservadorConsola {
+  + actualizar(caso, estadoAnterior) : void
+}
+
+abstract class ResponsableFactory {
+  + crearResponsable(nombre : String) : Responsable
+}
+
+class FabricaVoluntario {
+  + crearResponsable(nombre : String) : Responsable
+}
+
+class FabricaVeterinario {
+  + crearResponsable(nombre : String) : Responsable
+}
+
+class Responsable {
+  - nombre : String
+  - tipo : String
+  + getNombre() : String
+  + getTipo() : String
+}
+
+Main --> GestionCasos
+Main --> NotificadorEstado
+GestionCasos "1" o-- "*" CasoRescate
+CasoRescate --> NotificadorEstado
+NotificadorEstado "1" o-- "*" ObservadorCaso
+ObservadorConsola ..|> ObservadorCaso
+ResponsableFactory <|-- FabricaVoluntario
+ResponsableFactory <|-- FabricaVeterinario
+ResponsableFactory ..> Responsable : crea
+
+@enduml
