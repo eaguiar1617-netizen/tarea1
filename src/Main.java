@@ -1,3 +1,4 @@
+
 import java.util.ArrayList;
 import java.util.Scanner;
 import java.io.*;
@@ -6,13 +7,16 @@ import java.nio.charset.StandardCharsets;
 public class Main {
 
     static Scanner teclado = new Scanner(System.in);
-    static ArrayList<CasoRescate> casos =
-            new ArrayList<CasoRescate>();
-    static int siguienteCodigo = 1;
-    static final String ARCHIVO = "casos.txt";
+
+    // Patron Singleton
+    static GestionCasos gestor = GestionCasos.getInstancia();
+
+    // Patron Observer
+    static NotificadorEstado notificador = new NotificadorEstado();
 
     public static void main(String[] args) {
-        cargarCasos();
+
+        notificador.agregarObservador(new ObservadorConsola());
 
         int opcion;
 
@@ -47,7 +51,7 @@ public class Main {
                     registrarAdopcion();
                     break;
                 case 0:
-                    guardarCasos();
+                    gestor.guardarCasos();
                     System.out.println("Programa finalizado.");
                     break;
                 default:
@@ -95,12 +99,10 @@ public class Main {
         String descripcion = teclado.nextLine().trim();
 
         CasoRescate caso = new CasoRescate(
-                siguienteCodigo, nombre, especie, descripcion);
+                gestor.nuevoCodigo(), nombre, especie, descripcion);
 
-        casos.add(caso);
-        siguienteCodigo++;
-
-        guardarCasos();
+        gestor.getCasos().add(caso);
+        gestor.guardarCasos();
 
         System.out.println("Caso registrado correctamente.");
         System.out.println("Codigo asignado: " + caso.codigo);
@@ -109,12 +111,12 @@ public class Main {
     static void mostrarCasos() {
         System.out.println("\n--- CASOS REGISTRADOS ---");
 
-        if (casos.isEmpty()) {
+        if (gestor.getCasos().isEmpty()) {
             System.out.println("No hay casos registrados.");
             return;
         }
 
-        for (CasoRescate caso : casos) {
+        for (CasoRescate caso : gestor.getCasos()) {
             System.out.println("------------------------------");
             System.out.println("Codigo: " + caso.codigo);
             System.out.println("Animal: " + caso.nombre);
@@ -131,7 +133,7 @@ public class Main {
     static void asignarResponsable() {
         System.out.println("\n--- ASIGNAR RESPONSABLE ---");
 
-        if (casos.isEmpty()) {
+        if (gestor.getCasos().isEmpty()) {
             System.out.println("No hay casos registrados.");
             return;
         }
@@ -141,7 +143,7 @@ public class Main {
         System.out.print("Codigo del caso: ");
         int codigo = leerEntero();
 
-        CasoRescate caso = buscarCaso(codigo);
+        CasoRescate caso = gestor.buscarCaso(codigo);
 
         if (caso == null) {
             System.out.println("No existe ese caso.");
@@ -149,9 +151,9 @@ public class Main {
         }
 
         System.out.print("Nombre del responsable: ");
-        String responsable = teclado.nextLine().trim();
+        String nombre = teclado.nextLine().trim();
 
-        if (responsable.isEmpty()) {
+        if (nombre.isEmpty()) {
             System.out.println("El nombre no puede estar vacio.");
             return;
         }
@@ -161,26 +163,32 @@ public class Main {
         System.out.print("Tipo de responsable: ");
 
         int tipo = leerEntero();
+        ResponsableFactory fabrica;
 
         if (tipo == 1) {
-            caso.tipoResponsable = "Voluntario";
+            fabrica = new FabricaVoluntario();
         } else if (tipo == 2) {
-            caso.tipoResponsable = "Veterinario";
+            fabrica = new FabricaVeterinario();
         } else {
             System.out.println("Tipo no valido.");
             return;
         }
 
-        caso.responsable = responsable;
-        guardarCasos();
+        Responsable responsable = fabrica.crearResponsable(nombre);
+
+        caso.responsable = responsable.getNombre();
+        caso.tipoResponsable = responsable.getTipo();
+
+        gestor.guardarCasos();
 
         System.out.println("Responsable asignado correctamente.");
+        System.out.println("Tipo: " + responsable.getTipo());
     }
 
     static void cambiarEstado() {
         System.out.println("\n--- CAMBIAR ESTADO ---");
 
-        if (casos.isEmpty()) {
+        if (gestor.getCasos().isEmpty()) {
             System.out.println("No hay casos registrados.");
             return;
         }
@@ -190,7 +198,7 @@ public class Main {
         System.out.print("Codigo del caso: ");
         int codigo = leerEntero();
 
-        CasoRescate caso = buscarCaso(codigo);
+        CasoRescate caso = gestor.buscarCaso(codigo);
 
         if (caso == null) {
             System.out.println("No existe ese caso.");
@@ -204,33 +212,36 @@ public class Main {
         System.out.print("Nuevo estado: ");
 
         int opcion = leerEntero();
+        String nuevoEstado;
 
         switch (opcion) {
             case 1:
-                caso.estado = "Rescatado";
+                nuevoEstado = "Rescatado";
                 break;
             case 2:
-                caso.estado = "En tratamiento";
+                nuevoEstado = "En tratamiento";
                 break;
             case 3:
-                caso.estado = "Disponible para adopcion";
+                nuevoEstado = "Disponible para adopcion";
                 break;
             case 4:
-                caso.estado = "Adoptado";
+                nuevoEstado = "Adoptado";
                 break;
             default:
                 System.out.println("Estado no valido.");
                 return;
         }
 
-        guardarCasos();
+        caso.cambiarEstado(nuevoEstado, notificador);
+        gestor.guardarCasos();
+
         System.out.println("Estado actualizado correctamente.");
     }
 
     static void registrarAdopcion() {
         System.out.println("\n--- REGISTRAR ADOPCION ---");
 
-        if (casos.isEmpty()) {
+        if (gestor.getCasos().isEmpty()) {
             System.out.println("No hay casos registrados.");
             return;
         }
@@ -240,7 +251,7 @@ public class Main {
         System.out.print("Codigo del animal: ");
         int codigo = leerEntero();
 
-        CasoRescate caso = buscarCaso(codigo);
+        CasoRescate caso = gestor.buscarCaso(codigo);
 
         if (caso == null) {
             System.out.println("No existe ese caso.");
@@ -253,7 +264,8 @@ public class Main {
         }
 
         if (!caso.estado.equals("Disponible para adopcion")) {
-            System.out.println("Primero cambie el estado a Disponible para adopcion.");
+            System.out.println(
+                    "Primero cambie el estado a Disponible para adopcion.");
             return;
         }
 
@@ -266,21 +278,11 @@ public class Main {
         }
 
         caso.adoptante = adoptante;
-        caso.estado = "Adoptado";
+        caso.cambiarEstado("Adoptado", notificador);
 
-        guardarCasos();
+        gestor.guardarCasos();
 
         System.out.println("Adopcion registrada correctamente.");
-    }
-
-    static CasoRescate buscarCaso(int codigo) {
-        for (CasoRescate caso : casos) {
-            if (caso.codigo == codigo) {
-                return caso;
-            }
-        }
-
-        return null;
     }
 
     static int leerEntero() {
@@ -294,15 +296,56 @@ public class Main {
 
         return numero;
     }
+}
 
-    static void guardarCasos() {
-        try (PrintWriter archivo = new PrintWriter(
+// ==========================================
+// PATRON SINGLETON
+// Una sola instancia administra los casos.
+// ==========================================
+
+class GestionCasos {
+
+    private static final GestionCasos instancia = new GestionCasos();
+
+    private final ArrayList<CasoRescate> casos =
+            new ArrayList<CasoRescate>();
+
+    private int siguienteCodigo = 1;
+    private final String archivo = "casos.txt";
+
+    private GestionCasos() {
+        cargarCasos();
+    }
+
+    public static GestionCasos getInstancia() {
+        return instancia;
+    }
+
+    public ArrayList<CasoRescate> getCasos() {
+        return casos;
+    }
+
+    public int nuevoCodigo() {
+        return siguienteCodigo++;
+    }
+
+    public CasoRescate buscarCaso(int codigo) {
+        for (CasoRescate caso : casos) {
+            if (caso.codigo == codigo) {
+                return caso;
+            }
+        }
+        return null;
+    }
+
+    public void guardarCasos() {
+        try (PrintWriter salida = new PrintWriter(
                 new OutputStreamWriter(
-                        new FileOutputStream(ARCHIVO),
+                        new FileOutputStream(archivo),
                         StandardCharsets.UTF_8))) {
 
             for (CasoRescate caso : casos) {
-                archivo.println(
+                salida.println(
                         caso.codigo + "|" +
                         limpiar(caso.nombre) + "|" +
                         limpiar(caso.especie) + "|" +
@@ -310,8 +353,7 @@ public class Main {
                         limpiar(caso.estado) + "|" +
                         limpiar(caso.responsable) + "|" +
                         limpiar(caso.tipoResponsable) + "|" +
-                        limpiar(caso.adoptante)
-                );
+                        limpiar(caso.adoptante));
             }
 
         } catch (IOException e) {
@@ -319,16 +361,16 @@ public class Main {
         }
     }
 
-    static void cargarCasos() {
-        File archivo = new File(ARCHIVO);
+    private void cargarCasos() {
+        File fichero = new File(archivo);
 
-        if (!archivo.exists()) {
+        if (!fichero.exists()) {
             return;
         }
 
         try (BufferedReader lector = new BufferedReader(
                 new InputStreamReader(
-                        new FileInputStream(archivo),
+                        new FileInputStream(fichero),
                         StandardCharsets.UTF_8))) {
 
             String linea;
@@ -363,22 +405,108 @@ public class Main {
                 }
             }
 
+            if (!casos.isEmpty()) {
+                System.out.println("Se cargaron " + casos.size()
+                        + " caso(s) guardado(s).");
+            }
+
         } catch (IOException e) {
             System.out.println("Error al cargar: " + e.getMessage());
         }
-
-        if (!casos.isEmpty()) {
-            System.out.println("Se cargaron " + casos.size()
-                    + " caso(s) guardado(s).");
-        }
     }
 
-    static String limpiar(String texto) {
+    private String limpiar(String texto) {
         return texto.replace("|", "/")
                     .replace("\n", " ")
                     .replace("\r", " ");
     }
 }
+
+// ==========================================
+// PATRON OBSERVER
+// Notifica cuando cambia el estado de un caso.
+// ==========================================
+
+interface ObservadorCaso {
+    void actualizar(CasoRescate caso, String estadoAnterior);
+}
+
+class NotificadorEstado {
+
+    private final ArrayList<ObservadorCaso> observadores =
+            new ArrayList<ObservadorCaso>();
+
+    public void agregarObservador(ObservadorCaso observador) {
+        observadores.add(observador);
+    }
+
+    public void notificar(CasoRescate caso, String estadoAnterior) {
+        for (ObservadorCaso observador : observadores) {
+            observador.actualizar(caso, estadoAnterior);
+        }
+    }
+}
+
+class ObservadorConsola implements ObservadorCaso {
+
+    @Override
+    public void actualizar(CasoRescate caso, String estadoAnterior) {
+        System.out.println("\n[NOTIFICACION]");
+        System.out.println("Caso: " + caso.codigo
+                + " - " + caso.nombre);
+        System.out.println("Estado anterior: " + estadoAnterior);
+        System.out.println("Estado nuevo: " + caso.estado);
+    }
+}
+
+// ==========================================
+// PATRON FACTORY METHOD
+// Crea responsables segun su tipo.
+// ==========================================
+
+class Responsable {
+
+    private final String nombre;
+    private final String tipo;
+
+    public Responsable(String nombre, String tipo) {
+        this.nombre = nombre;
+        this.tipo = tipo;
+    }
+
+    public String getNombre() {
+        return nombre;
+    }
+
+    public String getTipo() {
+        return tipo;
+    }
+}
+
+abstract class ResponsableFactory {
+
+    public abstract Responsable crearResponsable(String nombre);
+}
+
+class FabricaVoluntario extends ResponsableFactory {
+
+    @Override
+    public Responsable crearResponsable(String nombre) {
+        return new Responsable(nombre, "Voluntario");
+    }
+}
+
+class FabricaVeterinario extends ResponsableFactory {
+
+    @Override
+    public Responsable crearResponsable(String nombre) {
+        return new Responsable(nombre, "Veterinario");
+    }
+}
+
+// ==========================================
+// CLASE DEL CASO DE RESCATE
+// ==========================================
 
 class CasoRescate {
 
@@ -391,8 +519,8 @@ class CasoRescate {
     String tipoResponsable;
     String adoptante;
 
-    CasoRescate(int codigo, String nombre, String especie,
-                String descripcion) {
+    public CasoRescate(int codigo, String nombre, String especie,
+                       String descripcion) {
         this.codigo = codigo;
         this.nombre = nombre;
         this.especie = especie;
@@ -401,5 +529,15 @@ class CasoRescate {
         this.responsable = "Sin asignar";
         this.tipoResponsable = "Sin asignar";
         this.adoptante = "Sin registrar";
+    }
+
+    public void cambiarEstado(String nuevoEstado,
+                              NotificadorEstado notificador) {
+        String estadoAnterior = this.estado;
+        this.estado = nuevoEstado;
+
+        if (!estadoAnterior.equals(nuevoEstado)) {
+            notificador.notificar(this, estadoAnterior);
+        }
     }
 }
