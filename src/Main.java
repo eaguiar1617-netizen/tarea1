@@ -1,13 +1,19 @@
 import java.util.ArrayList;
 import java.util.Scanner;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
 
 public class Main {
 
     static Scanner teclado = new Scanner(System.in);
-    static ArrayList<CasoRescate> casos = new ArrayList<CasoRescate>();
+    static ArrayList<CasoRescate> casos =
+            new ArrayList<CasoRescate>();
     static int siguienteCodigo = 1;
+    static final String ARCHIVO = "casos.txt";
 
     public static void main(String[] args) {
+        cargarCasos();
+
         int opcion;
 
         do {
@@ -28,27 +34,22 @@ public class Main {
                 case 1:
                     registrarCaso();
                     break;
-
                 case 2:
                     mostrarCasos();
                     break;
-
                 case 3:
                     asignarResponsable();
                     break;
-
                 case 4:
                     cambiarEstado();
                     break;
-
                 case 5:
                     registrarAdopcion();
                     break;
-
                 case 0:
-                    System.out.println("Gracias por utilizar el sistema.");
+                    guardarCasos();
+                    System.out.println("Programa finalizado.");
                     break;
-
                 default:
                     System.out.println("Opcion no valida.");
             }
@@ -57,7 +58,7 @@ public class Main {
     }
 
     static void registrarCaso() {
-        System.out.println("\n--- REGISTRO DE CASO DE RESCATE ---");
+        System.out.println("\n--- REGISTRO DE RESCATE ---");
 
         System.out.print("Nombre del animal: ");
         String nombre = teclado.nextLine().trim();
@@ -67,7 +68,6 @@ public class Main {
             return;
         }
 
-        System.out.println("Especie:");
         System.out.println("1. Perro");
         System.out.println("2. Gato");
         System.out.println("3. Fauna silvestre");
@@ -95,11 +95,12 @@ public class Main {
         String descripcion = teclado.nextLine().trim();
 
         CasoRescate caso = new CasoRescate(
-            siguienteCodigo, nombre, especie, descripcion
-        );
+                siguienteCodigo, nombre, especie, descripcion);
 
         casos.add(caso);
         siguienteCodigo++;
+
+        guardarCasos();
 
         System.out.println("Caso registrado correctamente.");
         System.out.println("Codigo asignado: " + caso.codigo);
@@ -109,7 +110,7 @@ public class Main {
         System.out.println("\n--- CASOS REGISTRADOS ---");
 
         if (casos.isEmpty()) {
-            System.out.println("Todavia no hay casos registrados.");
+            System.out.println("No hay casos registrados.");
             return;
         }
 
@@ -123,6 +124,7 @@ public class Main {
             System.out.println("Responsable: " + caso.responsable);
             System.out.println("Tipo de responsable: "
                     + caso.tipoResponsable);
+            System.out.println("Adoptante: " + caso.adoptante);
         }
     }
 
@@ -136,13 +138,13 @@ public class Main {
 
         mostrarCasos();
 
-        System.out.print("Ingrese el codigo del caso: ");
+        System.out.print("Codigo del caso: ");
         int codigo = leerEntero();
 
-        CasoRescate seleccionado = buscarCaso(codigo);
+        CasoRescate caso = buscarCaso(codigo);
 
-        if (seleccionado == null) {
-            System.out.println("No existe un caso con ese codigo.");
+        if (caso == null) {
+            System.out.println("No existe ese caso.");
             return;
         }
 
@@ -154,29 +156,29 @@ public class Main {
             return;
         }
 
-        System.out.println("Tipo de responsable:");
         System.out.println("1. Voluntario");
         System.out.println("2. Veterinario");
-        System.out.print("Seleccione una opcion: ");
+        System.out.print("Tipo de responsable: ");
 
         int tipo = leerEntero();
 
         if (tipo == 1) {
-            seleccionado.responsable = responsable;
-            seleccionado.tipoResponsable = "Voluntario";
+            caso.tipoResponsable = "Voluntario";
         } else if (tipo == 2) {
-            seleccionado.responsable = responsable;
-            seleccionado.tipoResponsable = "Veterinario";
+            caso.tipoResponsable = "Veterinario";
         } else {
             System.out.println("Tipo no valido.");
             return;
         }
 
+        caso.responsable = responsable;
+        guardarCasos();
+
         System.out.println("Responsable asignado correctamente.");
     }
 
     static void cambiarEstado() {
-        System.out.println("\n--- CAMBIAR ESTADO DEL CASO ---");
+        System.out.println("\n--- CAMBIAR ESTADO ---");
 
         if (casos.isEmpty()) {
             System.out.println("No hay casos registrados.");
@@ -185,43 +187,43 @@ public class Main {
 
         mostrarCasos();
 
-        System.out.print("Ingrese el codigo del caso: ");
+        System.out.print("Codigo del caso: ");
         int codigo = leerEntero();
 
-        CasoRescate seleccionado = buscarCaso(codigo);
+        CasoRescate caso = buscarCaso(codigo);
 
-        if (seleccionado == null) {
-            System.out.println("No existe un caso con ese codigo.");
+        if (caso == null) {
+            System.out.println("No existe ese caso.");
             return;
         }
 
-        System.out.println("Seleccione el nuevo estado:");
         System.out.println("1. Rescatado");
         System.out.println("2. En tratamiento");
         System.out.println("3. Disponible para adopcion");
         System.out.println("4. Adoptado");
-        System.out.print("Opcion: ");
+        System.out.print("Nuevo estado: ");
 
-        int opcionEstado = leerEntero();
+        int opcion = leerEntero();
 
-        switch (opcionEstado) {
+        switch (opcion) {
             case 1:
-                seleccionado.estado = "Rescatado";
+                caso.estado = "Rescatado";
                 break;
             case 2:
-                seleccionado.estado = "En tratamiento";
+                caso.estado = "En tratamiento";
                 break;
             case 3:
-                seleccionado.estado = "Disponible para adopcion";
+                caso.estado = "Disponible para adopcion";
                 break;
             case 4:
-                seleccionado.estado = "Adoptado";
+                caso.estado = "Adoptado";
                 break;
             default:
                 System.out.println("Estado no valido.");
                 return;
         }
 
+        guardarCasos();
         System.out.println("Estado actualizado correctamente.");
     }
 
@@ -235,18 +237,23 @@ public class Main {
 
         mostrarCasos();
 
-        System.out.print("Codigo del animal que sera adoptado: ");
+        System.out.print("Codigo del animal: ");
         int codigo = leerEntero();
 
-        CasoRescate seleccionado = buscarCaso(codigo);
+        CasoRescate caso = buscarCaso(codigo);
 
-        if (seleccionado == null) {
-            System.out.println("No existe un caso con ese codigo.");
+        if (caso == null) {
+            System.out.println("No existe ese caso.");
             return;
         }
 
-        if (seleccionado.estado.equals("Adoptado")) {
-            System.out.println("Este animal ya esta registrado como adoptado.");
+        if (caso.estado.equals("Adoptado")) {
+            System.out.println("El animal ya esta registrado como adoptado.");
+            return;
+        }
+
+        if (!caso.estado.equals("Disponible para adopcion")) {
+            System.out.println("Primero cambie el estado a Disponible para adopcion.");
             return;
         }
 
@@ -258,12 +265,12 @@ public class Main {
             return;
         }
 
-        seleccionado.adoptante = adoptante;
-        seleccionado.estado = "Adoptado";
+        caso.adoptante = adoptante;
+        caso.estado = "Adoptado";
+
+        guardarCasos();
 
         System.out.println("Adopcion registrada correctamente.");
-        System.out.println("Animal: " + seleccionado.nombre);
-        System.out.println("Adoptante: " + seleccionado.adoptante);
     }
 
     static CasoRescate buscarCaso(int codigo) {
@@ -286,6 +293,90 @@ public class Main {
         teclado.nextLine();
 
         return numero;
+    }
+
+    static void guardarCasos() {
+        try (PrintWriter archivo = new PrintWriter(
+                new OutputStreamWriter(
+                        new FileOutputStream(ARCHIVO),
+                        StandardCharsets.UTF_8))) {
+
+            for (CasoRescate caso : casos) {
+                archivo.println(
+                        caso.codigo + "|" +
+                        limpiar(caso.nombre) + "|" +
+                        limpiar(caso.especie) + "|" +
+                        limpiar(caso.descripcion) + "|" +
+                        limpiar(caso.estado) + "|" +
+                        limpiar(caso.responsable) + "|" +
+                        limpiar(caso.tipoResponsable) + "|" +
+                        limpiar(caso.adoptante)
+                );
+            }
+
+        } catch (IOException e) {
+            System.out.println("Error al guardar: " + e.getMessage());
+        }
+    }
+
+    static void cargarCasos() {
+        File archivo = new File(ARCHIVO);
+
+        if (!archivo.exists()) {
+            return;
+        }
+
+        try (BufferedReader lector = new BufferedReader(
+                new InputStreamReader(
+                        new FileInputStream(archivo),
+                        StandardCharsets.UTF_8))) {
+
+            String linea;
+
+            while ((linea = lector.readLine()) != null) {
+                String[] datos = linea.split("\\|", -1);
+
+                if (datos.length != 8) {
+                    System.out.println("Se omitio un registro incompleto.");
+                    continue;
+                }
+
+                try {
+                    int codigo = Integer.parseInt(datos[0]);
+
+                    CasoRescate caso = new CasoRescate(
+                            codigo, datos[1], datos[2], datos[3]);
+
+                    caso.estado = datos[4];
+                    caso.responsable = datos[5];
+                    caso.tipoResponsable = datos[6];
+                    caso.adoptante = datos[7];
+
+                    casos.add(caso);
+
+                    if (codigo >= siguienteCodigo) {
+                        siguienteCodigo = codigo + 1;
+                    }
+
+                } catch (NumberFormatException e) {
+                    System.out.println("Se omitio un codigo invalido.");
+                }
+            }
+
+        } catch (IOException e) {
+            System.out.println("Error al cargar: " + e.getMessage());
+        }
+
+        if (!casos.isEmpty()) {
+            System.out.println("Se cargaron " + casos.size()
+                    + " caso(s) guardado(s).");
+        }
+    }
+
+    static String limpiar(String texto) {
+        return texto.replace("|", "/")
+                    .replace("\n", " ")
+                    .replace("\r", " ");
     }
 }
 
