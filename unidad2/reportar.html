@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Formulario HTML5 de registro de animales rescatados del refugio Patitas del Pacífico.">
+  <title>Registrar rescate | Patitas del Pacífico</title>
+</head>
+<body>
+  <header>
+    <h1>Patitas del Pacífico</h1>
+    <p>Sistema de control de rescate y adopción animal</p>
+    <nav aria-label="Menú principal">
+      <ul>
+        <li><a href="index.html">Inicio</a></li>
+        <li><a href="reportar.html" aria-current="page">Registrar rescate</a></li>
+        <li><a href="rescates.html">Consultar casos</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    <section aria-labelledby="encabezado-formulario">
+      <h2 id="encabezado-formulario">Formulario de nuevo rescate</h2>
+      <p>Ingrese los datos conocidos del animal. Los campos obligatorios son comprobados por el navegador.</p>
+      <form action="reportar.html" method="get">
+        <fieldset>
+          <legend>Identificación del caso</legend>
+          <p>
+            <label for="nombre">Nombre provisional o título del caso:</label>
+            <input id="nombre" name="nombre" type="text" maxlength="80" required>
+          </p>
+          <p>
+            <label for="categoria">Categoría del animal:</label>
+            <select id="categoria" name="categoria" required>
+              <option value="">Seleccione una categoría</option>
+              <option value="perros">Perros</option>
+              <option value="gatos">Gatos</option>
+              <option value="fauna-silvestre">Fauna Silvestre</option>
+            </select>
+          </p>
+          <p>
+            <label for="ubicacion">Lugar del hallazgo:</label>
+            <input id="ubicacion" name="ubicacion" type="text" maxlength="120">
+          </p>
+          <p>
+            <label for="fecha">Fecha del hallazgo:</label>
+            <input id="fecha" name="fecha" type="date">
+          </p>
+        </fieldset>
+
+        <fieldset>
+          <legend>Nivel de urgencia médica</legend>
+          <p><input id="urgencia-alta" name="urgencia" type="radio" value="alta" required> <label for="urgencia-alta">Alta</label></p>
+          <p><input id="urgencia-media" name="urgencia" type="radio" value="media"> <label for="urgencia-media">Media</label></p>
+          <p><input id="urgencia-baja" name="urgencia" type="radio" value="baja"> <label for="urgencia-baja">Baja</label></p>
+        </fieldset>
+
+        <p>
+          <label for="descripcion">Descripción del estado en que se encontró:</label>
+        </p>
+        <p>
+          <textarea id="descripcion" name="descripcion" rows="7" cols="55" minlength="10" required></textarea>
+        </p>
+        <p>
+          <button type="submit">Comprobar datos del reporte</button>
+          <button type="reset">Limpiar formulario</button>
+        </p>
+      </form>
+    </section>
+
+    <article>
+      <h2>Alcance del prototipo</h2>
+      <p>Este formulario demuestra la captura y validación de datos mediante HTML5. No incorpora una base de datos y no actualiza automáticamente el listado de casos.</p>
+    </article>
+  </main>
+
+  <footer>
+    <p>Proyecto académico de Desarrollo de Sistemas Informáticos, Unidad 2.</p>
+    <p>Elaborado por Edwin Patricio Aguiar Rodríguez - Paralelo A.</p>
+  </footer>
+</body>
+</html>
